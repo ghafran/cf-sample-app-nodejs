@@ -2,42 +2,61 @@ var express = require('express');
 var app = express();
 var cf_app = require('./app/vcap_application');
 var cf_svc = require('./app/vcap_services');
-const {
-    Client
-} = require('pg');
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
 app.use(express.static(__dirname + '/public'));
 
-app.get('/', function(req, res) {
-    res.render('pages/index', {
-        app_environment: app.settings.env,
-        application_name: cf_app.get_app_name(),
-        app_uris: cf_app.get_app_uris(),
-        app_space_name: cf_app.get_app_space(),
-        app_index: cf_app.get_app_index(),
-        app_mem_limits: cf_app.get_app_mem_limits(),
-        app_disk_limits: cf_app.get_app_disk_limits(),
-        service_label: cf_svc.get_service_label(),
-        service_name: cf_svc.get_service_name(),
-        service_plan: cf_svc.get_service_plan(),
-        processUptime: process.uptime()
+function db(cb) {
+    const {
+        Client
+    } = require('pg');
+    const client = new Client();
+    client.connect((err) => {
+        if (err) {
+            cb(err.stack);
+        } else {
+            client.query('SELECT $1::text as message', ['Database query successful!'], (err, results) => {
+                if (err) {
+                    cb(err.stack);
+                } else {
+                    cb(null, results.rows[0].message);
+                }
+                client.end();
+            });
+        }
     });
+}
+
+app.get('/', function(req, res) {
+    db((err, result) => {
+        var dbresult;
+        if (err) {
+            dbresult = err;
+        } else {
+            dbresult = result;
+        }
+        res.render('pages/index', {
+            app_environment: app.settings.env,
+            application_name: cf_app.get_app_name(),
+            app_uris: cf_app.get_app_uris(),
+            app_space_name: cf_app.get_app_space(),
+            app_index: cf_app.get_app_index(),
+            app_mem_limits: cf_app.get_app_mem_limits(),
+            app_disk_limits: cf_app.get_app_disk_limits(),
+            service_label: cf_svc.get_service_label(),
+            service_name: cf_svc.get_service_name(),
+            service_plan: cf_svc.get_service_plan(),
+            processUptime: process.uptime(),
+            dbresult: dbresult
+        });
+    });
+
 });
 
 app.get('/db', function(req, res) {
 
-    var client = new Client();
-    client.connect();
-    client.query('SELECT $1::text as message', ['Hello world!'], (err, data) => {
-        if (err) {
-            res.send(err.message);
-        } else {
-            res.send(data.rows[0].message);
-        }
-        client.end();
-    });
+
 });
 
 app.get('/env', function(req, res) {

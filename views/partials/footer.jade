@@ -1,4 +1,7 @@
 .row.mhn.mvxxl.txt-c
   span.txt-c.small.type-neutral-4
     | process uptime #{ processUptime!= undefined ? processUptime : 'unknown'} seconds
+  br
+  span.txt-c.small.type-neutral-4
+    | database result: #{ dbresult }
   div( data-ping='ping' style='display: none;')
