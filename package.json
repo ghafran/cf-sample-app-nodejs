@@ -1,9 +1,12 @@
 {
-  "name": "cf-nodejs",
-  "version": "1.0.0",
-  "dependencies": {
-    "express": "^4.13.4",
-    "jade": "^1.11.0",
-    "pg": "^7.4.3"
-  }
+    "name": "cf-nodejs",
+    "version": "1.0.0",
+    "engines": {
+        "node": "10.5.0"
+    },
+    "dependencies": {
+        "express": "^4.13.4",
+        "jade": "^1.11.0",
+        "pg": "^7.4.3"
+    }
 }
