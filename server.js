@@ -71,4 +71,9 @@ app.get('/env', function(req, res) {
     res.send(process.env);
 });
 
+app.get('/vcaps', function(req, res) {
+
+    res.send(process.env.VCAP_SERVICES);
+});
+
 app.listen(process.env.PORT || 4000);
