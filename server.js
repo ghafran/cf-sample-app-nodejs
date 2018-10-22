@@ -13,11 +13,11 @@ function db(cb) {
     } = require('pg');
     var vcaps = process.env.VCAP_SERVICES;
     const client = new Client({
-        user: vcaps.postgresql.credentials.username,
-        host: vcaps.postgresql.credentials.hostname,
-        database: vcaps.postgresql.credentials.dbname,
-        password: vcaps.postgresql.credentials.password,
-        port: vcaps.postgresql.credentials.port
+        user: vcaps.postgresql[0].credentials.username,
+        host: vcaps.postgresql[0].credentials.hostname,
+        database: vcaps.postgresql[0].credentials.dbname,
+        password: vcaps.postgresql[0].credentials.password,
+        port: vcaps.postgresql[0].credentials.port
     });
     client.connect((err) => {
         if (err) {
