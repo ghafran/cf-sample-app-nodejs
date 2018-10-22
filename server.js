@@ -11,7 +11,14 @@ function db(cb) {
     const {
         Client
     } = require('pg');
-    const client = new Client();
+    var vcaps = JSON.parse(process.env.VCAP_SERVICES || '{}');
+    const client = new Client({
+        user: vcaps.postgresql.credentials.username,
+        host: vcaps.postgresql.credentials.hostname,
+        database: vcaps.postgresql.credentials.dbname,
+        password: vcaps.postgresql.credentials.password,
+        port: vcaps.postgresql.credentials.port
+    });
     client.connect((err) => {
         if (err) {
             cb(err.stack);
