@@ -11,7 +11,7 @@ function db(cb) {
     const {
         Client
     } = require('pg');
-    var vcaps = JSON.parse(process.env.VCAP_SERVICES || '{}');
+    var vcaps = process.env.VCAP_SERVICES;
     const client = new Client({
         user: vcaps.postgresql.credentials.username,
         host: vcaps.postgresql.credentials.hostname,
