@@ -4,6 +4,7 @@ var app = express();
 var cf_app = require('./app/vcap_application');
 var cf_svc = require('./app/vcap_services');
 var pg = require('pg');
+var redis = require("redis");
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
@@ -35,6 +36,23 @@ function testPostgres(info){
     });
 }
 
+function testRedis(info){
+    return new promise((resolve)=>{
+        var client = redis.createClient({
+            host: info.credentials.hostname,
+            password: info.credentials.password,
+            port: info.credentials.port
+        });
+        client.get('test', (err, reply) => {
+            if(err){
+                resolve(`service ${info.name} query error: ${err.stack}`);
+            } else {
+                resolve(`service ${info.name} query successful!`);
+            }
+        });
+    });
+}
+
 function db(cb) {
 
     var vcaps = JSON.parse(process.env.VCAP_SERVICES);
@@ -44,6 +62,15 @@ function db(cb) {
         
         promise.mapSeries(vcaps.postgresql, (info)=>{
             return testPostgres(info).then((result)=>{
+                results += result;
+            });
+        }).then(()=>{
+            cb(null, results);
+        });
+    } else if(vcaps.redis){
+        
+        promise.mapSeries(vcaps.redis, (info)=>{
+            return testRedis(info).then((result)=>{
                 results += result;
             });
         }).then(()=>{
