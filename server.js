@@ -10,26 +10,28 @@ app.set('view engine', 'jade');
 app.use(express.static(__dirname + '/public'));
 
 function testPostgres(info){
-    var client = new pg.Client({
-        user: info.credentials.username,
-        host: info.credentials.hostname,
-        database: info.credentials.dbname,
-        password: info.credentials.password,
-        port: info.credentials.port
-    });
-    client.connect((err) => {
-        if (err) {
-            return promise.resolve(`service host ${info.credentials.hostname} connect error: ${err.stack}`);
-        } else {
-            client.query('SELECT $1::text as message', ['Database query successful!'], (err, results) => {
-                client.end();
-                if (err) {
-                    return promise.resolve(`service host ${info.credentials.hostname} query error: ${err.stack}`);
-                } else {
-                    return promise.resolve(`service host ${info.credentials.hostname} query successful!`);
-                }
-            });
-        }
+    return new promise((resolve)=>{
+        var client = new pg.Client({
+            user: info.credentials.username,
+            host: info.credentials.hostname,
+            database: info.credentials.dbname,
+            password: info.credentials.password,
+            port: info.credentials.port
+        });
+        client.connect((err) => {
+            if (err) {
+                resolve(`service ${info.name} connect error: ${err.stack}`);
+            } else {
+                client.query('SELECT $1::text as message', ['Database query successful!'], (err, results) => {
+                    client.end();
+                    if (err) {
+                        resolve(`service ${info.name} query error: ${err.stack}`);
+                    } else {
+                        resolve(`service ${info.name} query successful!`);
+                    }
+                });
+            }
+        });
     });
 }
 
@@ -42,7 +44,7 @@ function db(cb) {
         
         promise.mapSeries(vcaps.postgresql, (info)=>{
             return testPostgres(info).then((result)=>{
-                results += result + '<br />';
+                results += result;
             });
         }).then(()=>{
             cb(null, results);
