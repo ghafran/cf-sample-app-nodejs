@@ -2,5 +2,5 @@
 applications:
 - name: gtestapp
   memory: 512M
-  instances: 2
+  instances: 1
   random-route: true
