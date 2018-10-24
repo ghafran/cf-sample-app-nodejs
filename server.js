@@ -1,38 +1,55 @@
+var promise = require('bluebird');
 var express = require('express');
 var app = express();
 var cf_app = require('./app/vcap_application');
 var cf_svc = require('./app/vcap_services');
+var pg = require('pg');
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
 app.use(express.static(__dirname + '/public'));
 
-function db(cb) {
-    const {
-        Client
-    } = require('pg');
-    var vcaps = JSON.parse(process.env.VCAP_SERVICES);
-    const client = new Client({
-        user: vcaps.postgresql[0].credentials.username,
-        host: vcaps.postgresql[0].credentials.hostname,
-        database: vcaps.postgresql[0].credentials.dbname,
-        password: vcaps.postgresql[0].credentials.password,
-        port: vcaps.postgresql[0].credentials.port
+function testPostgres(info){
+    var client = new pg.Client({
+        user: info.credentials.username,
+        host: info.credentials.hostname,
+        database: info.credentials.dbname,
+        password: info.credentials.password,
+        port: info.credentials.port
     });
     client.connect((err) => {
         if (err) {
-            cb(err.stack);
+            return promise.resolve(`service host ${info.credentials.hostname} connect error: ${err.stack}`);
         } else {
             client.query('SELECT $1::text as message', ['Database query successful!'], (err, results) => {
-                if (err) {
-                    cb(err.stack);
-                } else {
-                    cb(null, results.rows[0].message);
-                }
                 client.end();
+                if (err) {
+                    return promise.resolve(`service host ${info.credentials.hostname} query error: ${err.stack}`);
+                } else {
+                    return promise.resolve(`service host ${info.credentials.hostname} query successful!`);
+                }
             });
         }
     });
+}
+
+function db(cb) {
+
+    var vcaps = JSON.parse(process.env.VCAP_SERVICES);
+    var results = '';
+
+    if(vcaps.postgresql){
+        
+        promise.mapSeries(vcaps.postgresql, (info)=>{
+            return testPostgres(info).then((result)=>{
+                results += result + '<br />';
+            });
+        }).then(()=>{
+            cb(null, results);
+        });
+    } else {
+        cb(null, 'no services bound to this application.');
+    }
 }
 
 app.get('/', function(req, res) {
