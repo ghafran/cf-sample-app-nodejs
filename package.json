@@ -5,6 +5,7 @@
         "node": "10.5.0"
     },
     "dependencies": {
+        "bluebird": "^3.5.2",
         "express": "^4.13.4",
         "jade": "^1.11.0",
         "pg": "^7.4.3"
