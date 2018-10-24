@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var promise = require('bluebird');
 var express = require('express');
 var app = express();
@@ -21,14 +22,23 @@ function testPostgres(info){
         });
         client.connect((err) => {
             if (err) {
-                resolve(`service ${info.name} connect error: ${err.stack}`);
+                resolve({
+                    success: false,
+                    message: `service ${info.name} connect error: ${err.stack}`
+                });
             } else {
                 client.query('SELECT $1::text as message', ['Database query successful!'], (err, results) => {
                     client.end();
                     if (err) {
-                        resolve(`service ${info.name} query error: ${err.stack}`);
+                        resolve({
+                            success: false,
+                            message: `service ${info.name} query error: ${err.stack}`
+                        });
                     } else {
-                        resolve(`service ${info.name} query successful!`);
+                        resolve({
+                            success: true,
+                            message: `service ${info.name} query successful!`
+                        });
                     }
                 });
             }
@@ -45,9 +55,15 @@ function testRedis(info){
         });
         client.get('test', (err, reply) => {
             if(err){
-                resolve(`service ${info.name} query error: ${err.stack}`);
+                resolve({
+                    success: false,
+                    message: `service ${info.name} query error: ${err.stack}`
+                });
             } else {
-                resolve(`service ${info.name} query successful!`);
+                resolve({
+                    success: true,
+                    message: `service ${info.name} query successful!`
+                });
             }
         });
     });
@@ -56,13 +72,13 @@ function testRedis(info){
 function db(cb) {
 
     var vcaps = JSON.parse(process.env.VCAP_SERVICES);
-    var results = '';
+    var results = [];
 
     if(vcaps.postgresql){
         
         promise.mapSeries(vcaps.postgresql, (info)=>{
             return testPostgres(info).then((result)=>{
-                results += result;
+                results.push(result);
             });
         }).then(()=>{
             cb(null, results);
@@ -71,7 +87,7 @@ function db(cb) {
         
         promise.mapSeries(vcaps.redis, (info)=>{
             return testRedis(info).then((result)=>{
-                results += result;
+                results.push(result);
             });
         }).then(()=>{
             cb(null, results);
@@ -82,13 +98,11 @@ function db(cb) {
 }
 
 app.get('/', function(req, res) {
-    db((err, result) => {
-        var dbresult;
-        if (err) {
-            dbresult = err;
-        } else {
-            dbresult = result;
-        }
+    db((err, results) => {
+        var dbresult = '';
+        _.filter(results, (result)=>{
+            dbresult += result
+        });
         res.render('pages/index', {
             app_environment: app.settings.env,
             application_name: cf_app.get_app_name(),
@@ -105,6 +119,20 @@ app.get('/', function(req, res) {
         });
     });
 
+});
+
+app.get('/health', function(req, res) {
+    db((err, results) => {
+        var failed = _.find(results, {
+            success: false
+        });
+        var success = failed ? false : true;
+        var statuscode = failed ? 500 : 200;
+        res.status(statuscode).json({
+            success,
+            results
+        });
+    });
 });
 
 app.get('/db', function(req, res) {
