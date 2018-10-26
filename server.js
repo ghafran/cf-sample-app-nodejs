@@ -11,8 +11,8 @@ app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
 app.use(express.static(__dirname + '/public'));
 
-function testPostgres(info){
-    return new promise((resolve)=>{
+function testPostgres(info) {
+    return new promise((resolve) => {
         var client = new pg.Client({
             user: info.credentials.username,
             host: info.credentials.hostname,
@@ -46,15 +46,15 @@ function testPostgres(info){
     });
 }
 
-function testRedis(info){
-    return new promise((resolve)=>{
+function testRedis(info) {
+    return new promise((resolve) => {
         var client = redis.createClient({
             host: info.credentials.hostname,
             password: info.credentials.password,
             port: info.credentials.port
         });
         client.get('test', (err, reply) => {
-            if(err){
+            if (err) {
                 resolve({
                     success: false,
                     message: `service ${info.name} query error: ${err.stack}`
@@ -74,22 +74,22 @@ function db(cb) {
     var vcaps = JSON.parse(process.env.VCAP_SERVICES);
     var results = [];
 
-    if(vcaps.postgresql){
-        
-        promise.mapSeries(vcaps.postgresql, (info)=>{
-            return testPostgres(info).then((result)=>{
+    if (vcaps.postgresql) {
+
+        promise.mapSeries(vcaps.postgresql, (info) => {
+            return testPostgres(info).then((result) => {
                 results.push(result);
             });
-        }).then(()=>{
+        }).then(() => {
             cb(null, results);
         });
-    } else if(vcaps.redis){
-        
-        promise.mapSeries(vcaps.redis, (info)=>{
-            return testRedis(info).then((result)=>{
+    } else if (vcaps.redis) {
+
+        promise.mapSeries(vcaps.redis, (info) => {
+            return testRedis(info).then((result) => {
                 results.push(result);
             });
-        }).then(()=>{
+        }).then(() => {
             cb(null, results);
         });
     } else {
@@ -100,8 +100,8 @@ function db(cb) {
 app.get('/', function(req, res) {
     db((err, results) => {
         var dbresult = '';
-        _.filter(results, (result)=>{
-            dbresult += result
+        _.filter(results, (result) => {
+            dbresult += result.message;
         });
         res.render('pages/index', {
             app_environment: app.settings.env,
