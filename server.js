@@ -83,9 +83,7 @@ function db(cb) {
         }).then(() => {
             cb(null, results);
         });
-    }
-    
-    if (vcaps.redis) {
+    } else if (vcaps.redis) {
 
         promise.mapSeries(vcaps.redis, (info) => {
             return testRedis(info).then((result) => {
@@ -94,9 +92,7 @@ function db(cb) {
         }).then(() => {
             cb(null, results);
         });
-    }
-    
-    if(!vcaps.postgresql && !vcaps.redis){
+    } else {
         cb(null, 'no services bound to this application.');
     }
 }
