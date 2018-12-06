@@ -1,5 +1,8 @@
 var _ = require('lodash');
+var fs = require('fs');
 var promise = require('bluebird');
+const http = require('http');
+const https = require('https');
 var express = require('express');
 var app = express();
 var cf_app = require('./app/vcap_application');
@@ -150,4 +153,23 @@ app.get('/vcaps', function(req, res) {
     res.send(process.env.VCAP_SERVICES);
 });
 
-app.listen(process.env.PORT || 4000);
+
+// Starting both http & https servers
+const httpServer = http.createServer(app);
+httpServer.listen(process.env.PORT, () => {
+	console.log('HTTP Server running on port ' + process.env.PORT);
+});
+
+// const privateKey = fs.readFileSync(__dirname + '/privkey.pem', 'utf8');
+// const certificate = fs.readFileSync(__dirname + '/cert.pem', 'utf8');
+// const ca = fs.readFileSync(__dirname + '/chain.pem', 'utf8');
+// const credentials = {
+// 	key: privateKey,
+// 	cert: certificate,
+// 	ca: ca
+// };
+// const httpsServer = https.createServer(credentials, app);
+// httpsServer.listen(process.env.PORT, () => {
+// 	console.log('HTTPS Server running on port ' + process.env.PORT);
+// });
+
