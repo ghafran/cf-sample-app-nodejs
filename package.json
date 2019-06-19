@@ -2,14 +2,17 @@
     "name": "cf-nodejs",
     "version": "1.0.0",
     "engines": {
-        "node": "10.5.0"
+        "node": "10.12.0"
     },
     "dependencies": {
         "bluebird": "^3.5.2",
+        "cfenv": "^1.2.2",
         "express": "^4.13.4",
         "jade": "^1.11.0",
         "lodash": "^4.17.11",
         "pg": "^7.4.3",
-        "redis": "^2.8.0"
+        "redis": "^2.8.0",
+        "request": "^2.88.0",
+        "request-promise": "^4.2.4"
     }
 }

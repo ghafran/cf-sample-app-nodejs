@@ -8,7 +8,9 @@ var app = express();
 var cf_app = require('./app/vcap_application');
 var cf_svc = require('./app/vcap_services');
 var pg = require('pg');
-var redis = require("redis");
+var redis = require('redis');
+var rp = require('request-promise');
+var cfenv = require('cfenv');
 
 app.set('views', __dirname + '/views');
 app.set('view engine', 'jade');
@@ -153,23 +155,68 @@ app.get('/vcaps', function(req, res) {
     res.send(process.env.VCAP_SERVICES);
 });
 
+app.get('/destinations/init', (req, res, next) => {
 
-// Starting both http & https servers
+    const uaa_service = cfenv.getAppEnv().getService('gxsuaa');
+    const dest_service = cfenv.getAppEnv().getService('gdest');
+    const sUaaCredentials = dest_service.credentials.clientid + ':' + dest_service.credentials.clientsecret;
+
+    if(!uaa_service) {
+        return next(new Error('No xsuaa service found.'));
+    }
+
+    if(!dest_service) {
+        return next(new Error('No destination service found.'));
+    }
+
+    rp({
+        method: 'POST',
+        uri: uaa_service.credentials.url + '/oauth/token',
+        headers: {
+            'Authorization': 'Basic ' + Buffer.from(sUaaCredentials).toString('base64')
+        },
+        form: {
+            'client_id': dest_service.credentials.clientid,
+            'grant_type': 'client_credentials'
+        },
+        json: true
+    }).then((auth) => {
+
+        global.auth = auth;
+        return res.json({
+            method: 'GET',
+            uri: dest_service.credentials.uri + '/destination-configuration/v1/destinations/' + sDestinationName,
+            headers: {
+                'Authorization': 'Bearer ' + auth.access_token
+            },
+            form: {
+                'client_id': dest_service.credentials.clientid,
+                'grant_type': 'client_credentials'
+            },
+            json: true
+        });
+        return rp({
+            method: 'GET',
+            uri: dest_service.credentials.uri + '/destination-configuration/v1/destinations/' + sDestinationName,
+            headers: {
+                'Authorization': 'Bearer ' + auth.access_token
+            },
+            form: {
+                'client_id': dest_service.credentials.clientid,
+                'grant_type': 'client_credentials'
+            },
+            json: true
+        }).then((auth) => {
+            
+        });
+    }).catch((err) => {
+        next(err);
+    });
+});
+
+// Starting http server
 const httpServer = http.createServer(app);
 httpServer.listen(process.env.PORT, () => {
 	console.log('HTTP Server running on port ' + process.env.PORT);
 });
-
-// const privateKey = fs.readFileSync(__dirname + '/privkey.pem', 'utf8');
-// const certificate = fs.readFileSync(__dirname + '/cert.pem', 'utf8');
-// const ca = fs.readFileSync(__dirname + '/chain.pem', 'utf8');
-// const credentials = {
-// 	key: privateKey,
-// 	cert: certificate,
-// 	ca: ca
-// };
-// const httpsServer = https.createServer(credentials, app);
-// httpsServer.listen(process.env.PORT, () => {
-// 	console.log('HTTPS Server running on port ' + process.env.PORT);
-// });
 

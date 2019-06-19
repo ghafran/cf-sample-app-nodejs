@@ -1,11 +1,11 @@
 ---
 applications:
-- name: app
+- name: gtest
   memory: 512M
   instances: 1
   random-route: true
   env:
-    NODE_ENV: production
+    NODE_ENV: development
     NODE_MODULES_CACHE: true
     NODE_VERBOSE: false
-    NPM_CONFIG_PRODUCTION: true
+    NPM_CONFIG_PRODUCTION: false
