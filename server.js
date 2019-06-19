@@ -179,7 +179,7 @@ app.get('/connectivity/test', (req, res, next) => {
             proxy: `http://${conn_service.credentials.onpremise_proxy_host}:${conn_service.credentials.onpremise_proxy_port}`,
             headers: {
                 'Proxy-Authorization': 'Bearer ' + auth.access_token,
-                // 'SAP-Connectivity-SCC-Location_ID': 'gcloudconnector'
+                'SAP-Connectivity-SCC-Location_ID': 'gcloudconnector'
             },
             json: true
         }).then((data) => {
