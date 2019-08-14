@@ -98,7 +98,7 @@ function db(cb) {
             cb(null, results);
         });
     } else {
-        cb(null, 'no services bound to this application.');
+        cb(null, [{ message: 'no services bound to this application.}]');
     }
 }
 
