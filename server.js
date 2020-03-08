@@ -98,7 +98,7 @@ function db(cb) {
             cb(null, results);
         });
     } else {
-        cb(null, [{ message: 'no services bound to this application.}]');
+        cb(null, [{ message: 'no services bound to this application.'}]);
     }
 }
 
@@ -187,6 +187,50 @@ app.get('/connectivity/test', (req, res, next) => {
         });
     }).catch((err) => {
         next(err);
+    });
+});
+
+app.get('/rest', function(req, res, next) {
+    var host = cf_app.get_app_uris();
+    console.log(host);
+    rp({
+        method: 'GET',
+        uri: `https://${host}/rest/test`,
+        json: true
+    }).then((data) => {
+        rp({
+            method: 'POST',
+            uri: `https://${host}/rest/test`,
+            json: true
+        }).then((data) => {
+            rp({
+                method: 'PUT',
+                uri: `https://${host}/rest/test`,
+                json: true
+            }).then((data) => {
+                rp({
+                    method: 'DELETE',
+                    uri: `https://${host}/rest/test`,
+                    json: true
+                }).then((data) => {
+                    res.json(data);
+                }).catch((err) => {
+                    next(err);
+                });
+            }).catch((err) => {
+                next(err);
+            });
+        }).catch((err) => {
+            next(err);
+        });
+    }).catch((err) => {
+        next(err);
+    });
+});
+
+app.all('/rest/test', function(req, res) {
+    res.json({
+        success: true
     });
 });
 
