@@ -234,6 +234,18 @@ app.all('/rest/test', function(req, res) {
     });
 });
 
+app.get('/cre', function(req, res, next) {
+    rp({
+        method: 'GET',
+        uri: `https://provisioning-service.cfapps.cre.scp.sapns2.us/health`,
+        json: true
+    }).then((data) => {
+        res.json(data);
+    }).catch((err) => {
+        next(err);
+    });
+});
+
 // Starting http server
 const httpServer = http.createServer(app);
 httpServer.listen(process.env.PORT, () => {
