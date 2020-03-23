@@ -246,6 +246,10 @@ app.get('/cre', function(req, res, next) {
     });
 });
 
+app.get('/headers', function(req, res, next) {
+    res.json(req.headers);
+});
+
 // Starting http server
 const httpServer = http.createServer(app);
 httpServer.listen(process.env.PORT, () => {
